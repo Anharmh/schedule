@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>جدول المناوبات</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --panel:rgba(255,255,255,.06);
+    --panel-brd:rgba(255,255,255,.12);
+    --gold:#f2c14e;
+    --gold-soft:#f2c14e33;
+    --text:#f3f5fb;
+    --muted:#aeb6cc;
+
+    --c-day:#f59e0b;     /* ظهر */
+    --c-day-bg:#f59e0b26;
+    --c-night:#6366f1;   /* ليل */
+    --c-night-bg:#6366f126;
+    --c-off:#64748b;     /* أوف */
+    --c-off-bg:#64748b26;
+    --c-morn:#10b981;    /* صباح ثابت */
+    --c-morn-bg:#10b98126;
+
+    --cal-bg:#101a30;
+    --cal-brd:#f2c14e30;
+    --cal-text:#f3f5fb;
+    --cal-muted:#aeb6cc;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Cairo',sans-serif;
+    color:var(--text);
+    min-height:100vh;
+    padding:22px 16px 60px;
+    position:relative;
+  }
+
+  /* ===== خلفية الموقع ===== */
+  body::before{
+    content:"";position:fixed;inset:0;z-index:-2;
+    background-image:url('background.jpg');
+    background-size:cover;background-position:center;background-attachment:fixed;
+  }
+  body::after{
+    content:"";position:fixed;inset:0;z-index:-1;
+    background:
+      radial-gradient(1100px 600px at 90% -10%, #f2c14e17, transparent 60%),
+      linear-gradient(180deg, rgba(6,10,20,.80), rgba(8,13,26,.88) 45%, rgba(6,10,20,.93));
+  }
+
+  .wrap{max-width:900px;margin:0 auto;}
+
+  /* ===== Header ===== */
+  .hero{
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    background:var(--panel);border:1px solid var(--panel-brd);
+    border-radius:20px;padding:18px 22px;backdrop-filter:blur(16px);
+    box-shadow:0 14px 34px #00000055;
+  }
+  .hero h1{
+    margin:0;font-size:clamp(20px,4vw,27px);
+    background:linear-gradient(90deg,#fff,var(--gold));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    font-weight:800;
+  }
+  .back-link{
+    display:inline-flex;align-items:center;gap:5px;
+    color:var(--muted);text-decoration:none;font-size:12.5px;font-weight:700;
+    background:#00000030;border:1px solid var(--panel-brd);
+    padding:6px 13px;border-radius:999px;transition:.2s;
+  }
+  .back-link:hover{color:var(--gold);border-color:var(--gold-soft);}
+  .hero .pills{display:flex;gap:8px;flex-wrap:wrap;margin-right:auto;}
+  .hero .pills .g{
+    background:linear-gradient(135deg,var(--gold),#d89b2d);
+    color:#20160a;font-weight:800;font-size:12.5px;
+    padding:8px 15px;border-radius:999px;white-space:nowrap;
+  }
+  .hero .pills .h{
+    color:var(--gold);font-weight:700;font-size:12px;
+    background:#00000040;border:1px solid var(--panel-brd);
+    padding:7px 14px;border-radius:999px;white-space:nowrap;
+  }
+
+  /* ===== Section title ===== */
+  .sec-title{
+    margin:30px 0 12px;display:flex;align-items:center;gap:10px;
+    font-size:16px;font-weight:700;color:var(--gold);
+  }
+  .sec-title .line{flex:1;height:1px;background:linear-gradient(90deg,var(--panel-brd),transparent);}
+  .sec-gap{margin-top:30px;}
+
+  /* ===== خط الوقت النحيف ===== */
+  .timeline-card{
+    background:var(--panel);border:1px solid var(--panel-brd);
+    border-radius:18px;padding:18px 20px 16px;backdrop-filter:blur(16px);
+    box-shadow:0 14px 34px #00000045;
+  }
+  .thin-track{direction:ltr;position:relative;height:38px;margin:4px 6px 0;}
+  .thin-track .line{
+    position:absolute;top:19px;left:0;right:0;height:3px;border-radius:3px;
+    background:linear-gradient(90deg,var(--c-morn),var(--c-day),var(--c-night));opacity:.6;
+  }
+  .thin-track .tick{
+    position:absolute;top:19px;width:9px;height:9px;border-radius:50%;
+    background:var(--gold);box-shadow:0 0 8px var(--gold-soft);transform:translate(-50%,-50%);
+  }
+  .thin-track .tick span{
+    position:absolute;top:13px;left:50%;transform:translateX(-50%);
+    font-size:11px;color:var(--muted);white-space:nowrap;font-weight:600;
+  }
+  .now-mark{
+    position:absolute;top:19px;width:13px;height:13px;border-radius:50%;background:#fff;
+    box-shadow:0 0 10px #fff,0 0 18px var(--gold);transform:translate(-50%,-50%);
+    transition:left .3s;z-index:2;
+  }
+  .now-mark::after{
+    content:"الآن";position:absolute;bottom:13px;left:50%;transform:translateX(-50%);
+    font-size:9.5px;background:var(--gold);color:#20160a;padding:2px 7px;border-radius:999px;
+    font-weight:800;white-space:nowrap;
+  }
+
+  .now-next{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px;}
+  @media(max-width:520px){.now-next{grid-template-columns:1fr;}}
+  .status-chip{
+    background:#00000030;border:1px solid var(--panel-brd);border-radius:14px;
+    padding:12px 14px;text-align:center;
+  }
+  .status-chip .tag{font-size:10.5px;color:var(--muted);font-weight:700;margin-bottom:6px;letter-spacing:.3px;}
+  .status-chip .main{font-size:15px;font-weight:800;}
+  .status-chip .sub{font-size:11.5px;color:var(--muted);margin-top:3px;}
+  .status-chip.now{
+    border-color:var(--gold);box-shadow:0 0 0 1px var(--gold-soft),0 10px 22px #f2c14e30;
+  }
+
+  /* ===== Duty cards ===== */
+  .duty-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  @media(max-width:720px){.duty-grid{grid-template-columns:repeat(2,1fr);}}
+  .duty-card{
+    position:relative;background:var(--panel);border:1px solid var(--panel-brd);
+    border-radius:16px;padding:16px 12px;text-align:center;backdrop-filter:blur(14px);
+  }
+  .duty-card .letter{
+    width:42px;height:42px;border-radius:13px;margin:0 auto 9px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;font-weight:800;color:#fff;
+  }
+  .duty-card .phase{font-size:14px;font-weight:700;margin-bottom:2px;}
+  .duty-card .day-n{font-size:11.5px;color:var(--muted);}
+  .duty-card.active{
+    border-color:var(--c-night);box-shadow:0 0 0 1px var(--c-night),0 10px 26px #6366f140;
+  }
+  .duty-card.active::before{
+    content:"الآن";position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+    background:var(--c-night);color:#fff;font-size:10px;font-weight:700;
+    padding:2px 9px;border-radius:999px;white-space:nowrap;
+  }
+
+  /* ===== Calendar ===== */
+  .date-toggle{
+    max-width:420px;margin:0 auto;
+    width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;
+    background:#0d1528cc;border:1px solid var(--panel-brd);color:var(--text);
+    padding:12px 16px;border-radius:14px;font-family:'Cairo',sans-serif;font-size:14px;
+    font-weight:700;cursor:pointer;transition:.18s;
+  }
+  .date-toggle:hover{border-color:var(--gold-soft);}
+  .date-toggle .arrow{color:var(--gold);font-size:12px;transition:.2s;}
+  .date-toggle.open .arrow{transform:rotate(180deg);}
+
+  .cal-pop{max-width:420px;margin:10px auto 0;}
+
+  .cal-card{
+    background:var(--cal-bg);border:1px solid var(--cal-brd);
+    border-radius:24px;padding:20px 18px;
+    box-shadow:0 16px 38px #00000055;
+  }
+  .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+  .cal-nav button{
+    background:#ffffff14;border:1px solid #ffffff22;color:#fff;
+    width:38px;height:38px;border-radius:12px;cursor:pointer;font-size:16px;transition:.2s;
+  }
+  .cal-nav button:hover{background:var(--gold-soft);color:var(--gold);border-color:var(--gold-soft);}
+  .cal-nav h2{font-size:17px;font-weight:800;margin:0;color:#fff;}
+  .cal-hijri-range{text-align:center;font-size:10.5px;color:var(--cal-muted);margin-bottom:16px;}
+
+  .week-row{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px;}
+  .week-row div{text-align:center;font-size:11px;color:var(--cal-muted);font-weight:600;padding:2px 0;}
+
+  .days-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .day-cell{
+    aspect-ratio:1;border-radius:12px;
+    background:transparent;border:1px solid transparent;
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;font-weight:600;color:var(--cal-text);
+    cursor:pointer;transition:.18s;
+  }
+  .day-cell.empty{background:transparent;border:none;cursor:default;}
+  .day-cell:not(.empty):hover{background:#ffffff12;}
+  .day-cell.today{border-color:var(--gold);color:var(--gold);font-weight:800;}
+  .day-cell.picked{background:var(--gold);color:#20160a;border-color:var(--gold);font-weight:800;}
+
+  .cal-actions{display:flex;gap:8px;margin-top:14px;}
+  .cal-actions button{
+    flex:1;padding:12px;border-radius:14px;font-weight:800;font-size:14px;cursor:pointer;border:none;
+    font-family:'Cairo',sans-serif;
+  }
+  .cal-actions .cancel{background:#ffffff14;color:#fff;}
+  .cal-actions .cancel:hover{background:#ffffff22;}
+  .cal-actions .today-btn{background:linear-gradient(135deg,var(--gold),#d89b2d);color:#20160a;}
+  .cal-actions .today-btn:hover{filter:brightness(1.06);}
+
+  .day-details{
+    max-width:420px;margin:18px auto 0;
+    padding-top:14px;border-top:1px dashed var(--panel-brd);
+    font-size:13px;color:var(--muted);
+  }
+  .day-details .ddate{font-size:14.5px;font-weight:800;color:var(--text);margin-bottom:10px;}
+  .day-details .drow{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:8px 12px;border-radius:10px;margin-bottom:6px;background:#00000025;
+  }
+  .day-details .drow.hl{box-shadow:inset 0 0 0 1px currentColor;}
+  .day-details .drow b{font-size:13px;}
+  .day-details .drow span{font-size:11.5px;}
+
+  footer{text-align:center;color:var(--muted);font-size:12px;margin-top:36px;}
+
+  @media(max-width:480px){
+    body{padding:16px 10px 44px;}
+    .hero{padding:14px 16px;gap:10px;}
+    .timeline-card{padding:14px 12px 12px;}
+    .duty-card{padding:12px 8px;}
+    .cal-card{padding:12px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="hero">
+    <a class="back-link" href="index.html">↩ الرئيسية</a>
+    <h1>جدول المناوبات</h1>
+    <div class="pills">
+      <span class="g" id="todayPillG"></span>
+      <span class="h" id="todayPillH"></span>
+    </div>
+  </div>
+
+  <div class="timeline-card sec-gap">
+    <div class="thin-track" id="thinTrack">
+      <div class="line"></div>
+      <div class="tick" style="left:0%"><span>6 صباح</span></div>
+      <div class="tick" style="left:33.33%"><span>2 ظهر</span></div>
+      <div class="tick" style="left:66.66%"><span>10 الليل</span></div>
+      <div class="now-mark" id="nowMark"></div>
+    </div>
+    <div class="now-next" id="nowNext"></div>
+  </div>
+
+  <div class="duty-grid sec-gap" id="dutyGrid"></div>
+
+  <div class="sec-title"><span>التقويم</span><span class="line"></span></div>
+  <button type="button" class="date-toggle" id="dateToggle">
+    <span id="dateToggleText"></span><span class="arrow">▾</span>
+  </button>
+  <div class="cal-pop" id="calPop" style="display:none;">
+    <div class="cal-card">
+      <div class="cal-nav">
+        <button id="prevBtn">‹</button>
+        <h2 id="monthLabel"></h2>
+        <button id="nextBtn">›</button>
+      </div>
+      <div class="cal-hijri-range" id="hijriRange"></div>
+
+      <div class="week-row">
+        <div>أحد</div><div>اثنين</div><div>ثلاثاء</div><div>أربعاء</div><div>خميس</div><div>جمعة</div><div>سبت</div>
+      </div>
+      <div class="days-grid" id="daysGrid"></div>
+      <div class="cal-actions">
+        <button type="button" class="cancel" id="cancelBtn">إلغاء</button>
+        <button type="button" class="today-btn" id="todayBtn">اليوم</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="day-details" id="dayDetails"></div>
+
+  <footer>إعداد / أنهار الحمداني</footer>
+</div>
+
+<script>
+/* ===================== منطق المناوبات ===================== */
+// مناوبة ج ثابتة صباحًا حتى 30/4/1448هـ (2026-10-06)، ومن 1/5/1448هـ (2026-10-07) تصبح مناوبة ب هي الثابتة صباحًا
+const EPOCH  = new Date(2026, 9, 6);
+const SWITCH = new Date(2026, 9, 7);
+
+const PHASE_COLOR = {
+  'ظهر':  {c:'var(--c-day)',   bg:'var(--c-day-bg)'},
+  'ليل':  {c:'var(--c-night)', bg:'var(--c-night-bg)'},
+  'أوف':  {c:'var(--c-off)',   bg:'var(--c-off-bg)'},
+  'صباح': {c:'var(--c-morn)',  bg:'var(--c-morn-bg)'}
+};
+const ORDINAL = {1:'الأول', 2:'الثاني', 3:'الثالث'};
+
+function stripTime(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+function diffDays(d){ return Math.round((stripTime(d) - EPOCH) / 86400000); }
+function mod9(n){ return ((n % 9) + 9) % 9; }
+
+function phaseFromPos(p){
+  if(p < 3) return {phase:'ظهر', day:p+1};
+  if(p < 6) return {phase:'ليل', day:p-3+1};
+  return {phase:'أوف', day:p-6+1};
+}
+
+function getDaySchedule(date){
+  const d = stripTime(date);
+  const dd = diffDays(d);
+  const afterSwitch = d.getTime() >= SWITCH.getTime();
+  const slot2Group = afterSwitch ? 'ج' : 'ب';
+  const fixedGroup = afterSwitch ? 'ب' : 'ج';
+
+  const a    = phaseFromPos(mod9(dd + 0));
+  const s2   = phaseFromPos(mod9(dd + 3));
+  const offd = phaseFromPos(mod9(dd + 6));
+
+  const result = {};
+  result['أ'] = a;
+  result[slot2Group] = s2;
+  result[fixedGroup] = {phase:'صباح', day:null, fixed:true};
+  result['د'] = offd;
+  return result;
+}
+
+function groupForPhase(date, phaseName){
+  const sch = getDaySchedule(date);
+  for(const g of ['أ','ب','ج','د']){
+    if(phaseName === 'صباح'){ if(sch[g].fixed) return g; }
+    else if(sch[g].phase === phaseName) return g;
+  }
+  return null;
+}
+
+function dayWord(info){
+  return info.fixed ? 'دوام ثابت' : `اليوم ${ORDINAL[info.day]}`;
+}
+
+/* ===================== الهجري عبر Intl ===================== */
+const HIJRI_LOCALE = 'ar-SA-u-ca-islamic-umalqura-nu-latn';
+function hijriFull(date){
+  try{ return new Intl.DateTimeFormat(HIJRI_LOCALE, {day:'numeric', month:'long', year:'numeric'}).format(date); }
+  catch(e){ return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-nu-latn', {day:'numeric', month:'long', year:'numeric'}).format(date); }
+}
+
+/* ===================== بطاقات الدوام اليوم ===================== */
+function renderDutyCards(){
+  const today = new Date();
+  const sch = getDaySchedule(today);
+  const nightGroup = groupForPhase(today, 'ليل');
+  const grid = document.getElementById('dutyGrid');
+  grid.innerHTML = '';
+  ['أ','ب','ج','د'].forEach(g=>{
+    const info = sch[g];
+    const colors = PHASE_COLOR[info.phase];
+    const card = document.createElement('div');
+    card.className = 'duty-card' + (g===nightGroup ? ' active' : '');
+    card.innerHTML = `
+      <div class="letter" style="background:${colors.c}">${g}</div>
+      <div class="phase" style="color:${colors.c}">${info.phase}</div>
+      <div class="day-n">${dayWord(info)}</div>
+    `;
+    grid.appendChild(card);
+  });
+
+  document.getElementById('todayPillG').textContent =
+    today.toLocaleDateString('ar-SA-u-nu-latn', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  document.getElementById('todayPillH').textContent = hijriFull(today);
+}
+
+/* ===================== الخط الزمني ===================== */
+const PHASE_ORDER = ['صباح','ظهر','ليل'];
+const HOUR_START  = [6,14,22];
+
+function segmentAt(index){
+  const dateOffset = Math.floor(index/3);
+  const phaseIdx = ((index%3)+3)%3;
+  const base = stripTime(new Date());
+  const date = new Date(base.getFullYear(), base.getMonth(), base.getDate()+dateOffset);
+  return {date, phase:PHASE_ORDER[phaseIdx], hour:HOUR_START[phaseIdx]};
+}
+
+function relDayLabel(date){
+  const diff = Math.round((stripTime(date) - stripTime(new Date())) / 86400000);
+  if(diff === 0) return 'اليوم';
+  if(diff === 1) return 'غدًا';
+  if(diff === -1) return 'أمس';
+  return date.toLocaleDateString('ar-SA-u-nu-latn', {day:'numeric', month:'short'});
+}
+
+function timeRangeOf(seg){
+  const hours = {6:'6:00 ص', 14:'2:00 م', 22:'10:00 م'};
+  const nextHour = seg.hour===22 ? '6:00 ص' : (seg.hour===6 ? '2:00 م' : '10:00 م');
+  return `${hours[seg.hour]} ← ${nextHour}`;
+}
+
+function renderTimeline(){
+  const now = new Date();
+  const base = stripTime(now);
+  const todaySixAM = new Date(base.getFullYear(), base.getMonth(), base.getDate(), 6,0,0);
+  const diffMin = (now - todaySixAM) / 60000;
+  const currentIndex = Math.floor(diffMin / 480);
+
+  const relMin = (((now.getHours()*60+now.getMinutes()) - 360) % 1440 + 1440) % 1440;
+  document.getElementById('nowMark').style.left = (relMin/1440*100) + '%';
+
+  const row = document.getElementById('nowNext');
+  row.innerHTML = '';
+  const tags = ['المناوبة الحالية الآن','المناوبة التالية'];
+  [currentIndex, currentIndex+1].forEach((idx,i)=>{
+    const seg = segmentAt(idx);
+    const g = groupForPhase(seg.date, seg.phase);
+    const info = getDaySchedule(seg.date)[g];
+    const colors = PHASE_COLOR[seg.phase];
+    const chip = document.createElement('div');
+    chip.className = 'status-chip' + (i===0 ? ' now' : '');
+    chip.innerHTML = `
+      <div class="tag">${tags[i]}</div>
+      <div class="main" style="color:${colors.c}">مناوبة ${g} — ${seg.phase}</div>
+      <div class="sub">${dayWord(info)} · ${relDayLabel(seg.date)} ${timeRangeOf(seg)}</div>
+    `;
+    row.appendChild(chip);
+  });
+}
+
+/* ===================== التقويم (هجري) ===================== */
+let pickedDateStr = null;
+let hijriAnchor = null;
+
+function addDays(date, n){ const d=stripTime(date); return new Date(d.getFullYear(), d.getMonth(), d.getDate()+n); }
+
+function hijriParts(date){
+  try{
+    var fmt = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {year:'numeric', month:'numeric', day:'numeric'});
+  }catch(e){
+    fmt = new Intl.DateTimeFormat('en-u-ca-islamic', {year:'numeric', month:'numeric', day:'numeric'});
+  }
+  const o = {};
+  fmt.formatToParts(date).forEach(p=>o[p.type]=p.value);
+  return {y:+o.year, m:+o.month, d:+o.day};
+}
+
+function hijriMonthBounds(anchor){
+  let d = stripTime(anchor);
+  let p = hijriParts(d);
+  let guard = 0;
+  while(p.d !== 1 && guard < 40){ d = addDays(d, -1); p = hijriParts(d); guard++; }
+  const first = d, y = p.y, m = p.m;
+
+  let d2 = addDays(first, 1);
+  let p2 = hijriParts(d2);
+  guard = 0;
+  while(p2.y === y && p2.m === m && guard < 40){ d2 = addDays(d2, 1); p2 = hijriParts(d2); guard++; }
+  const last = addDays(d2, -1);
+  return {first, last};
+}
+
+function initCalendarToToday(){
+  hijriAnchor = new Date();
+  pickedDateStr = toDateStr(new Date());
+}
+
+function jsDayToArabicCol(jsDay){ return jsDay; }
+
+function toDateStr(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
+}
+
+let curBounds = null;
+
+function renderCalendar(){
+  curBounds = hijriMonthBounds(hijriAnchor);
+  const first = curBounds.first, last = curBounds.last;
+  const daysInMonth = Math.round((last - first) / 86400000) + 1;
+
+  document.getElementById('monthLabel').textContent =
+    new Intl.DateTimeFormat(HIJRI_LOCALE, {month:'long', year:'numeric'}).format(first);
+  document.getElementById('hijriRange').textContent =
+    `${first.toLocaleDateString('ar-SA-u-nu-latn',{day:'numeric',month:'long',year:'numeric'})} — ${last.toLocaleDateString('ar-SA-u-nu-latn',{day:'numeric',month:'long',year:'numeric'})} م`;
+
+  const grid = document.getElementById('daysGrid');
+  grid.innerHTML = '';
+
+  const startCol = jsDayToArabicCol(first.getDay());
+  const today = stripTime(new Date());
+
+  for(let i=0;i<startCol;i++){
+    const empty = document.createElement('div');
+    empty.className = 'day-cell empty';
+    grid.appendChild(empty);
+  }
+
+  for(let i=0;i<daysInMonth;i++){
+    const date = addDays(first, i);
+    const dateStr = toDateStr(date);
+    const cell = document.createElement('div');
+    cell.className = 'day-cell';
+    if(stripTime(date).getTime() === today.getTime()) cell.classList.add('today');
+    if(pickedDateStr === dateStr) cell.classList.add('picked');
+    cell.textContent = i + 1;
+    cell.addEventListener('click', ()=>{
+      pickedDateStr = dateStr;
+      renderCalendar();
+      showDayDetails(date);
+      closeCalPop();
+    });
+    grid.appendChild(cell);
+  }
+
+  if(pickedDateStr){
+    const [y,m,d] = pickedDateStr.split('-').map(Number);
+    showDayDetails(new Date(y, m-1, d));
+  }
+}
+
+function updateDateToggleText(date){
+  const el = document.getElementById('dateToggleText');
+  if(el) el.textContent = '📅 ' + date.toLocaleDateString('ar-SA-u-nu-latn', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+}
+
+function closeCalPop(){
+  document.getElementById('calPop').style.display = 'none';
+  document.getElementById('dateToggle').classList.remove('open');
+}
+
+function showDayDetails(date){
+  updateDateToggleText(date);
+  const sch = getDaySchedule(date);
+  const box = document.getElementById('dayDetails');
+  const niceDate = date.toLocaleDateString('ar-SA-u-nu-latn', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+
+  let rows = '';
+  ['أ','ب','ج','د'].forEach(g=>{
+    const info = sch[g];
+    const colors = PHASE_COLOR[info.phase];
+    rows += `
+      <div class="drow hl" style="color:${colors.c}">
+        <b style="color:${colors.c}">مناوبة ${g} — ${info.phase}</b>
+        <span>${dayWord(info)}</span>
+      </div>`;
+  });
+
+  box.innerHTML = `<div class="ddate">${niceDate} · ${hijriFull(date)}</div>${rows}`;
+}
+
+document.getElementById('dateToggle').addEventListener('click', ()=>{
+  const pop = document.getElementById('calPop');
+  const btn = document.getElementById('dateToggle');
+  const open = pop.style.display !== 'none';
+  pop.style.display = open ? 'none' : 'block';
+  btn.classList.toggle('open', !open);
+});
+document.getElementById('cancelBtn').addEventListener('click', closeCalPop);
+document.getElementById('prevBtn').addEventListener('click', ()=>{
+  hijriAnchor = addDays(curBounds.first, -1);
+  renderCalendar();
+});
+document.getElementById('nextBtn').addEventListener('click', ()=>{
+  hijriAnchor = addDays(curBounds.last, 1);
+  renderCalendar();
+});
+document.getElementById('todayBtn').addEventListener('click', ()=>{
+  const t = new Date();
+  hijriAnchor = t;
+  pickedDateStr = toDateStr(t);
+  renderCalendar();
+  showDayDetails(t);
+  closeCalPop();
+});
+
+/* ===================== تشغيل ===================== */
+renderDutyCards();
+renderTimeline();
+initCalendarToToday();
+renderCalendar();
+setInterval(renderTimeline, 60000);
+</script>
+
+</body>
+</html>
