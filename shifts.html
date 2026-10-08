@@ -19,7 +19,6 @@
     <h1>جدول المناوبات</h1>
     <div class="pills">
       <span class="g" id="todayPillG"></span>
-      <span class="h" id="todayPillH"></span>
     </div>
   </div>
 
@@ -164,8 +163,7 @@ function renderDutyCards(){
   });
 
   document.getElementById('todayPillG').textContent =
-    today.toLocaleDateString('ar-SA-u-nu-latn', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
-  document.getElementById('todayPillH').textContent = hijriFull(today);
+    today.toLocaleDateString(HIJRI_LOCALE, {weekday:'long', day:'numeric', month:'long', year:'numeric'});
 }
 
 /* ===================== الخط الزمني ===================== */
