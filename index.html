@@ -7,73 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --panel:rgba(255,255,255,.07);
-    --panel-brd:rgba(255,255,255,.14);
-    --gold:#f2c14e;
-    --gold-soft:#f2c14e33;
-    --text:#f3f5fb;
-    --muted:#aeb6cc;
-  }
-  *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
-  body{
-    font-family:'Cairo',sans-serif;
-    color:var(--text);
-    min-height:100vh;
-    display:flex;align-items:center;justify-content:center;
-    padding:24px;
-    position:relative;
-  }
-  body::before{
-    content:"";position:fixed;inset:0;z-index:-2;
-    background-image:url('background.jpg');
-    background-size:cover;background-position:center;background-attachment:fixed;
-  }
-  body::after{
-    content:"";position:fixed;inset:0;z-index:-1;
-    background:
-      radial-gradient(1100px 600px at 90% -10%, #f2c14e17, transparent 60%),
-      linear-gradient(180deg, rgba(6,10,20,.78), rgba(8,13,26,.88) 45%, rgba(6,10,20,.93));
-  }
-
-  .menu{
-    display:grid;grid-template-columns:1fr 1fr;gap:20px;
-    width:100%;max-width:620px;
-  }
-  @media(max-width:520px){.menu{grid-template-columns:1fr;}}
-
-  .box{
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
-    background:var(--panel);border:1px solid var(--panel-brd);
-    border-radius:24px;padding:42px 20px;
-    backdrop-filter:blur(16px);
-    box-shadow:0 16px 38px #00000055;
-    text-decoration:none;color:var(--text);
-    transition:.25s;
-  }
-  .box:hover{
-    transform:translateY(-4px);
-    border-color:var(--gold-soft);
-    box-shadow:0 20px 44px #00000066, 0 0 0 1px var(--gold-soft);
-  }
-  .box .icon{
-    width:60px;height:60px;border-radius:18px;
-    display:flex;align-items:center;justify-content:center;
-    font-size:28px;
-    background:linear-gradient(135deg,var(--gold),#d89b2d);
-    box-shadow:0 8px 20px #f2c14e35;
-  }
-  .box .icon.alt{background:linear-gradient(135deg,#6366f1,#4338ca);box-shadow:0 8px 20px #6366f140;}
-  .box h2{margin:0;font-size:17px;font-weight:800;}
-  .box p{margin:0;font-size:11.5px;color:var(--muted);}
-
-  footer{
-    position:fixed;bottom:16px;left:0;right:0;
-    text-align:center;color:var(--muted);font-size:12px;
-  }
-</style>
+<link rel="stylesheet" href="css/common.css">
+<link rel="stylesheet" href="css/home.css">
 </head>
 <body>
 
