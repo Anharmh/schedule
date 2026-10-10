@@ -213,6 +213,23 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:36px;}
   padding:2px 9px;border-radius:999px;white-space:nowrap;
 }
 
+#view-shifts .cal-type-switch{
+  max-width:420px;margin:0 auto 10px;
+  display:flex;gap:6px;background:#0d152850;border:1px solid var(--panel-brd);
+  border-radius:999px;padding:4px;
+}
+#view-shifts .cal-type-switch .type-opt{
+  flex:1;background:transparent;border:none;color:var(--muted);
+  font-family:'Cairo',sans-serif;font-size:12px;font-weight:700;
+  padding:9px 8px;border-radius:999px;cursor:pointer;transition:.2s;
+}
+#view-shifts .cal-type-switch .type-opt.active{background:var(--gold);color:#20160a;}
+
+#view-shifts .cal-caption{
+  max-width:420px;margin:0 auto 14px;
+  font-size:11.5px;color:var(--muted);text-align:center;line-height:1.6;
+}
+
 #view-shifts .date-toggle{max-width:420px;margin:0 auto;}
 #view-shifts .cal-pop{max-width:420px;margin:10px auto 0;}
 
@@ -473,6 +490,11 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:36px;}
   <div class="duty-grid sec-gap" id="dutyGrid"></div>
 
   <div class="sec-title"><span>التقويم</span><span class="line"></span></div>
+  <div class="cal-type-switch">
+    <button type="button" class="type-opt active" id="typeGroups">تقويم المجموعات</button>
+    <button type="button" class="type-opt" id="typeMorning">تقويم مناوبة الصباح</button>
+  </div>
+  <p class="cal-caption" id="calCaption"></p>
   <button type="button" class="date-toggle" id="dateToggle">
     <span id="dateToggleText"></span><span class="arrow">▾</span>
   </button>
@@ -549,6 +571,15 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:36px;}
 (function(){
 const EPOCH  = new Date(2026, 9, 6);
 const SWITCH = new Date(2026, 9, 12);
+
+// مجموعات الدوام الصباحي الداخلية (3 مجموعات، 4 أيام دوام / يومين أوف)
+// تبدأ من 1 جمادى الأولى 1448هـ، وفي كل مرة مجموعة وحدة فقط أوف يومين والباقي دوام
+const MORNING_EPOCH = SWITCH;
+function morningOffGroup(date){
+  const dd = Math.round((stripTime(date) - MORNING_EPOCH) / 86400000);
+  const pos = ((dd % 6) + 6) % 6;
+  return Math.floor(pos / 2) + 1; // 1, 2 أو 3
+}
 
 function nowRiyadh(){
   const fmt = new Intl.DateTimeFormat('en-US', {
@@ -821,25 +852,68 @@ function closeCalPop(){
   document.getElementById('dateToggle').classList.remove('open');
 }
 
+let calType = 'groups';
+
+function updateCalCaption(){
+  const el = document.getElementById('calCaption');
+  el.textContent = calType === 'groups'
+    ? 'اضغط أي يوم بالتقويم لمعرفة المناوبة المستلمة في ذلك اليوم'
+    : 'اضغط أي يوم بالتقويم لمعرفة المجموعة المستلمة في ذلك اليوم';
+}
+
 function showDayDetails(date){
   updateDateToggleText(date);
-  const sch = getDaySchedule(date);
   const box = document.getElementById('dayDetails');
   const niceDate = date.toLocaleDateString('ar-SA-u-nu-latn', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
 
   let rows = '';
-  ['أ','ب','ج','د'].forEach(g=>{
-    const info = sch[g];
-    const colors = PHASE_COLOR[info.phase];
-    rows += `
-      <div class="drow hl" style="color:${colors.c}">
-        <b style="color:${colors.c}">مناوبة ${g} — ${info.phase}</b>
-        <span>${dayWord(info)}</span>
-      </div>`;
-  });
+  if(calType === 'groups'){
+    const sch = getDaySchedule(date);
+    ['أ','ب','ج','د'].forEach(g=>{
+      const info = sch[g];
+      const colors = PHASE_COLOR[info.phase];
+      rows += `
+        <div class="drow hl" style="color:${colors.c}">
+          <b style="color:${colors.c}">مناوبة ${g} — ${info.phase}</b>
+          <span>${dayWord(info)}</span>
+        </div>`;
+    });
+  }else{
+    const offGroup = morningOffGroup(date);
+    [1,2,3].forEach(n=>{
+      const isOff = n === offGroup;
+      const color = isOff ? 'var(--c-off)' : 'var(--c-morn)';
+      rows += `
+        <div class="drow hl" style="color:${color}">
+          <b style="color:${color}">مجموعة الصباح ${n}</b>
+          <span>${isOff ? 'أوف' : 'دوام'}</span>
+        </div>`;
+    });
+  }
 
   box.innerHTML = `<div class="ddate">${niceDate} · ${hijriFull(date)}</div>${rows}`;
 }
+
+document.getElementById('typeGroups').addEventListener('click', ()=>{
+  calType = 'groups';
+  document.getElementById('typeGroups').classList.add('active');
+  document.getElementById('typeMorning').classList.remove('active');
+  updateCalCaption();
+  if(pickedDateStr){
+    const [y,m,d] = pickedDateStr.split('-').map(Number);
+    showDayDetails(new Date(y, m-1, d));
+  }
+});
+document.getElementById('typeMorning').addEventListener('click', ()=>{
+  calType = 'morning';
+  document.getElementById('typeMorning').classList.add('active');
+  document.getElementById('typeGroups').classList.remove('active');
+  updateCalCaption();
+  if(pickedDateStr){
+    const [y,m,d] = pickedDateStr.split('-').map(Number);
+    showDayDetails(new Date(y, m-1, d));
+  }
+});
 
 document.getElementById('dateToggle').addEventListener('click', ()=>{
   const pop = document.getElementById('calPop');
@@ -880,6 +954,7 @@ document.getElementById('todayBtn').addEventListener('click', ()=>{
 
 renderDutyCards();
 renderTimeline();
+updateCalCaption();
 initCalendarToToday();
 renderCalendar();
 setInterval(()=>{ renderTimeline(); renderDutyCards(); }, 60000);
